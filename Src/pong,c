@@ -1,0 +1,126 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+int left_racket_y = 10;
+int right_racket_y = 10;
+int ball_x = 40, ball_y = 12;
+int ball_dx = -1, ball_dy = -1;
+int left_score = 0, right_score = 0;
+
+void reset_ball() {
+    ball_x = 40;
+    ball_y = 12;
+    ball_dx = (rand() % 2) ? 1 : -1;
+    ball_dy = (rand() % 2) ? 1 : -1;
+}
+
+void draw() {
+    printf("\033[2J\033[H");
+    for (int y = 0; y < 25; y++) {
+        for (int x = 0; x < 80; x++) {
+            if (x == ball_x && y == ball_y) {
+                printf("*");
+            } else if (y == 0 || y == 24) {
+                printf("-");
+            } else if (x == 0) {
+                if (y >= left_racket_y && y <= left_racket_y + 2) {
+                    printf("|");
+                } else {
+                    printf(" ");
+                }
+            } else if (x == 79) {
+                if (y >= right_racket_y && y <= right_racket_y + 2) {
+                    printf("|");
+                } else {
+                    printf(" ");
+                }
+            } else {
+                printf(" ");
+            }
+        }
+        printf("\n");
+    }
+    printf("Left: %d | Right: %d\n", left_score, right_score);
+}
+
+void update_ball() {
+    ball_x += ball_dx;
+    ball_y += ball_dy;
+
+    if (ball_y == 0 || ball_y == 24) {
+        ball_dy = -ball_dy;
+    }
+
+    if (ball_x == 0) {
+        if (ball_y >= left_racket_y && ball_y <= left_racket_y + 2) {
+            ball_dx = 1;
+            if (ball_y == left_racket_y) {
+                ball_dy = -1;
+            } else if (ball_y == left_racket_y + 1) {
+                ball_dy = (rand() % 2) ? 1 : -1;
+            } else {
+                ball_dy = 1;
+            }
+        } else {
+            right_score++;
+            reset_ball();
+        }
+    }
+
+    if (ball_x == 79) {
+        if (ball_y >= right_racket_y && ball_y <= right_racket_y + 2) {
+            ball_dx = -1;
+            if (ball_y == right_racket_y) {
+                ball_dy = -1;
+            } else if (ball_y == right_racket_y + 1) {
+                ball_dy = (rand() % 2) ? 1 : -1;
+            } else {
+                ball_dy = 1;
+            }
+        } else {
+            left_score++;
+            reset_ball();
+        }
+    }
+}
+
+int main() {
+    srand(time(NULL));
+    reset_ball();
+
+    while (1) {
+        draw();
+
+        if (left_score == 21) {
+            printf("Left player wins!\n");
+            break;
+        } else if (right_score == 21) {
+            printf("Right player wins!\n");
+            break;
+        }
+
+        char c;
+        while (1) {
+            c = getchar();
+            if (c == '\n') continue;
+            if (c == 'a' || c == 'z' || c == 'k' || c == 'm' || c == ' ') break;
+            while (getchar() != '\n')
+                ;
+        }
+
+        if (c == 'a') {
+            if (left_racket_y > 0) left_racket_y--;
+        } else if (c == 'z') {
+            if (left_racket_y < 22) left_racket_y++;
+        } else if (c == 'k') {
+            if (right_racket_y > 0) right_racket_y--;
+        } else if (c == 'm') {
+            if (right_racket_y < 22) right_racket_y++;
+        }
+
+        update_ball();
+    }
+
+    return 0;
+}
